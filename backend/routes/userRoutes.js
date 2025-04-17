@@ -12,7 +12,7 @@ router.post("/login", loginUser);
 // Configure Multer Storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Save uploads to "uploads" folder
+    cb(null, "uploads/"); 
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + "-" + file.originalname);
@@ -24,7 +24,7 @@ const upload = multer({ storage });
 // GET all users
 router.get("/", async (req, res) => {
   try {
-    const users = await User.find();  // <-- REPLACE THIS LINE
+    const users = await User.find();  
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
