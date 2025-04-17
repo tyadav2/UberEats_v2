@@ -2,67 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DashboardNavbar from '../components/DashboardNavbar';
+import { useSelector, useDispatch } from "react-redux";
+import {
+  removeFromCart,
+  clearCart,
+  addToCart,
+} from "../redux/slices/orderSlice";
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState([]);
-  const [totalPrice, setTotalPrice] = useState(0);
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.order.cartItems);  
+  const totalPrice = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [isPickup, setIsPickup] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Get cart items from localStorage
-    const items = JSON.parse(localStorage.getItem('cart')) || [];
-
-    // Convert price to a number before calculations
-    const updatedItems = items.map(item => ({
-      ...item,
-      price: Number(item.price),
-    }));
-
-    setCartItems(updatedItems);
-
-    // Calculate total price
-    const total = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    setTotalPrice(total);
-    
-    // Generate random delivery fee between $1 and $5
-    if (items.length > 0) {
-      const randomFee = (Math.random() * 4 + 1).toFixed(2);
-      setDeliveryFee(parseFloat(randomFee));
-    }
-  }, []);
+ 
 
   const updateQuantity = (itemId, newQuantity) => {
     if (newQuantity < 1) return;
-
-    const updatedCart = cartItems.map(item =>
-      item._id === itemId || item._id === itemId ? { ...item, quantity: newQuantity } : item
-    );
-
-    setCartItems(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
-
-    // Recalculate total price
-    const newTotal = updatedCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    setTotalPrice(newTotal);
+  
+    const item = cartItems.find((i) => i._id === itemId);
+    if (item) {
+      dispatch(removeFromCart({ id: item._id }));
+      dispatch(addToCart({ ...item, quantity: newQuantity }));
+    }
   };
 
   const removeItem = (itemId) => {
-    const updatedCart = cartItems.filter(item => item._id !== itemId && item._id !== itemId);
-    setCartItems(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
-
-    // Recalculate total price
-    const newTotal = updatedCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    setTotalPrice(newTotal);
-    
-    // If cart becomes empty, reset delivery fee
-    if (updatedCart.length === 0) {
-      setDeliveryFee(0);
-    }
+    dispatch(removeFromCart({ id: itemId }));
   };
 
   // Address Lookup Feature
@@ -157,9 +130,7 @@ const CartPage = () => {
       });
   
       // Clear cart on successful order
-      localStorage.removeItem("cart");
-      setCartItems([]);
-      setTotalPrice(0);
+      dispatch(clearCart());
       setDeliveryFee(0);
   
       alert("Order placed successfully!");

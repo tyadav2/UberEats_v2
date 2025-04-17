@@ -2,27 +2,29 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { useDispatch } from "react-redux";
+import { login } from "../redux/slices/authSlice";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async () => {
     try {
-      // API endpoint for customer login
       const apiUrl = "http://localhost:5000/api/users/login";
-
-      // Sending login request
       const response = await axios.post(apiUrl, { email, password });
 
-      // Store token in localStorage
+      // ✅ Save to localStorage (optional for persistence)
       localStorage.setItem("customerToken", JSON.stringify(response.data.token));
+
+      // ✅ Dispatch to Redux store
+      dispatch(login({ token: response.data.token, user: response.data.user }));
 
       console.log("Customer login successful:", response.data);
       alert("Login successful!");
 
-      // Redirect to customer dashboard
       navigate("/dashboard");
     } catch (error) {
       console.error("Login failed:", error);

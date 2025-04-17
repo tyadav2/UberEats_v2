@@ -1,33 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchRestaurants } from '../redux/slices/restaurantSlice';
 
 function RestaurantList() {
-  const [restaurants, setRestaurants] = useState([]);
-  const [sortedRestaurants, setSortedRestaurants] = useState([]);
+  const dispatch = useDispatch();
+  const { restaurants, loading, error } = useSelector((state) => state.restaurant);
   const [sortOrder, setSortOrder] = useState('default');
+  const [sortedRestaurants, setSortedRestaurants] = useState([]);
 
-  // Fetch restaurants when the component mounts
   useEffect(() => {
-    fetchRestaurants();
-  }, []);
+    dispatch(fetchRestaurants());
+  }, [dispatch]);
 
-  // Update sorted restaurants whenever restaurants data or sortOrder changes
   useEffect(() => {
-    sortRestaurants();
-  }, [restaurants, sortOrder]);
-
-  // Function to fetch restaurants from backend API
-  const fetchRestaurants = async () => {
-    try {
-      const res = await axios.get('http://localhost:5000/api/restaurants');
-      setRestaurants(res.data);
-    } catch (error) {
-      console.error("Error fetching restaurants:", error);
-    }
-  };
-
-  // Function to sort the restaurants based on rating
-  const sortRestaurants = () => {
     let sorted = [...restaurants];
     if (sortOrder === 'asc') {
       sorted.sort((a, b) => a.rating - b.rating);
@@ -35,37 +20,27 @@ function RestaurantList() {
       sorted.sort((a, b) => b.rating - a.rating);
     }
     setSortedRestaurants(sorted);
-  };
+  }, [restaurants, sortOrder]);
 
-  // Handler for when sort order is changed
-  const handleSortChange = (e) => {
-    setSortOrder(e.target.value);
-  };
-
-  // Handler to reset sorting to default (unsorted order)
-  const resetSorting = () => {
-    setSortOrder('default');
-    setSortedRestaurants(restaurants);
-  };
+  if (loading) return <p>Loading restaurants...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div>
-      <h2>Restaurant List</h2>
-      <div>
-        <label htmlFor="sort">Sort by rating: </label>
-        <select id="sort" value={sortOrder} onChange={handleSortChange}>
-          <option value="default">Default</option>
-          <option value="asc">Low to High</option>
-          <option value="desc">High to Low</option>
-        </select>
-        <button onClick={resetSorting}>Reset</button>
-      </div>
+      <h2 className="text-2xl font-bold mb-4">Restaurants</h2>
+      <select
+        value={sortOrder}
+        onChange={(e) => setSortOrder(e.target.value)}
+        className="mb-4 p-2 border rounded"
+      >
+        <option value="default">Sort by Default</option>
+        <option value="asc">Sort by Rating (Asc)</option>
+        <option value="desc">Sort by Rating (Desc)</option>
+      </select>
       <ul>
         {sortedRestaurants.map((restaurant) => (
-          <li key={restaurant._id}>
-            <h3>{restaurant.name}</h3>
-            <p>Rating: {restaurant.rating}</p>
-            <p>{restaurant.description}</p>
+          <li key={restaurant._id} className="border-b py-2">
+            {restaurant.name} - Rating: {restaurant.rating}
           </li>
         ))}
       </ul>
