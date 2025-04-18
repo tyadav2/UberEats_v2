@@ -16,15 +16,20 @@ const protect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id); //Mongoose
-    const restaurant = await Restaurant.findById(decoded.id); //Mongoose
-
-    if (user) {
-      req.user = user;
-    } else if (restaurant) {
+    if (decoded.role === "restaurant") {
+      const restaurant = await Restaurant.findById(decoded.id);
+      if (!restaurant) return res.status(404).json({ message: "Restaurant not found" });
       req.restaurant = restaurant;
+    }
+     else if (decoded.role === "user") {
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      req.user = user;
+
     } else {
-      return res.status(404).json({ message: "User or Restaurant not found" });
+      return res.status(403).json({ message: "Invalid token role" });
     }
 
     next();
@@ -34,13 +39,10 @@ const protect = async (req, res, next) => {
   }
 };
 
-const protectOrderAccess = async (req, res, next) => {
-  const { user, restaurant } = req;
-
-  if (!user && !restaurant) {
+const protectOrderAccess = (req, res, next) => {
+  if (!req.user && !req.restaurant) {
     return res.status(403).json({ message: "Unauthorized access" });
   }
-
   next();
 };
 

@@ -82,7 +82,12 @@ exports.loginRestaurant = async (req, res) => {
       const isMatch = await bcrypt.compare(password, restaurant.password);
       if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
   
-      const token = jwt.sign({ id: restaurant._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+      //const token = jwt.sign({ id: restaurant._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+      const token = jwt.sign(
+        { id: restaurant._id, role: "restaurant" },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
   
       res.json({
         message: "Restaurant logged in",

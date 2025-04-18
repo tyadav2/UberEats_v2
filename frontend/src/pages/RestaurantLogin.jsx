@@ -2,26 +2,35 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/slices/authSlice';
 
 const RestaurantLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+      
         const data = { email, password };
-
+      
         try {
-            const response = await axios.post('http://localhost:5000/api/restaurants/login', data);
-            localStorage.setItem('restaurantToken', response.data.token);
-            alert(response.data.message);
-            navigate('/restaurant/dashboard');
+          const response = await axios.post('http://localhost:5000/api/restaurants/login', data);
+      
+          dispatch(login({
+            token: response.data.token,
+            user: response.data.restaurant || { email },
+            role: 'restaurant',
+          }));
+      
+          alert(response.data.message);
+          navigate('/restaurant/dashboard');
         } catch (error) {
-            alert('Error: ' + (error.response?.data?.message || 'Login failed!'));
+          alert('Error: ' + (error.response?.data?.message || 'Login failed!'));
         }
-    };
+      };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from 'react-redux';
+
 
 const RestaurantDashboard = () => {
     const [restaurant, setRestaurant] = useState(null);
@@ -15,7 +17,7 @@ const RestaurantDashboard = () => {
     const [orderDetails, setOrderDetails] = useState(null);
 
     const navigate = useNavigate();
-    const token = localStorage.getItem("restaurantToken");
+    const token = useSelector((state) => state.auth.token);
 
 
     useEffect(() => {

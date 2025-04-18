@@ -1,14 +1,22 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './slices/authSlice';
-import restaurantReducer from './slices/restaurantSlice';
-import orderReducer from './slices/orderSlice';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import rootReducer from './slices';
+
+const persistConfig = {
+  key: 'root',
+  storage,
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    restaurant: restaurantReducer,
-    order: orderReducer,
-  },
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false, // redux-persist needs this disabled
+    }),
 });
 
+export const persistor = persistStore(store);
 export default store;
