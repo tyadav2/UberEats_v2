@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DashboardNavbar from "../components/DashboardNavbar";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, removeFromCart } from "../redux/slices/orderSlice";
 
 const RestaurantPage = () => {
   const { restaurantId } = useParams();
@@ -11,7 +13,9 @@ const RestaurantPage = () => {
   const [dishes, setDishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [cart, setCart] = useState([]);
+  //const [cart, setCart] = useState([]);
+  const cart = useSelector((state) => state.order.cartItems);
+  const dispatch = useDispatch();
 
   // Function to fetch restaurant details and dishes
   useEffect(() => {
@@ -43,46 +47,15 @@ const RestaurantPage = () => {
     fetchRestaurantAndDishes();
   }, [restaurantId]);
 
-  // Load cart from localStorage on component mount
-  useEffect(() => {
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    setCart(storedCart);
-  }, []);
 
-  // Helper function to update cart in both state and localStorage
-  const updateCart = (newCart) => {
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
+
+
+  const addToCartHandler = (dish) => {
+    dispatch(addToCart({ ...dish, restaurantId, quantity: 1 }));
   };
 
-  // Function to add items to cart
-  const addToCart = (dish) => {
-    const updatedCart = [...cart];
-    const existingItemIndex = updatedCart.findIndex((item) => item._id === dish._id);
-
-    if (existingItemIndex >= 0) {
-      updatedCart[existingItemIndex].quantity += 1;
-    } else {
-      updatedCart.push({ ...dish, quantity: 1 });
-    }
-
-    updateCart(updatedCart);
-  };
-
-  // Function to reduce quantity in cart
-  const removeFromCart = (dish) => {
-    const updatedCart = [...cart];
-    const existingItemIndex = updatedCart.findIndex((item) => item._id === dish._id);
-
-    if (existingItemIndex >= 0) {
-      if (updatedCart[existingItemIndex].quantity > 1) {
-        updatedCart[existingItemIndex].quantity -= 1;
-      } else {
-        // Remove item completely if quantity becomes 0
-        updatedCart.splice(existingItemIndex, 1);
-      }
-      updateCart(updatedCart);
-    }
+  const removeFromCartHandler = (dish) => {
+    dispatch(removeFromCart({ id: dish._id }));
   };
 
   // Function to get quantity of item in cart
@@ -207,7 +180,7 @@ const RestaurantPage = () => {
                     {getItemQuantity(dish._id) > 0 ? (
                       <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-2">
                         <button
-                          onClick={() => removeFromCart(dish)}
+                          onClick={() => removeFromCartHandler(dish)}
                           className="text-black-700 font-bold text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
                         >
                           -
@@ -216,7 +189,7 @@ const RestaurantPage = () => {
                           {getItemQuantity(dish._id)}
                         </span>
                         <button
-                          onClick={() => addToCart(dish)}
+                          onClick={() => addToCartHandler(dish)}
                           className="text-blue-700 font-bold text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-100 transition"
                         >
                           +
@@ -224,7 +197,7 @@ const RestaurantPage = () => {
                       </div>
                     ) : (
                       <button
-                        onClick={() => addToCart(dish)}
+                        onClick={() => addToCartHandler(dish)}
                         className="w-full bg-black hover:bg-gray-800 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
