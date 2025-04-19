@@ -1,6 +1,7 @@
 const Order = require("../models/Order");
 const Dish = require("../models/Dish");
 const Restaurant = require("../models/Restaurant");
+const { producer } = require('../config/kafka'); // Add to top of file
 
 // Get Orders for Logged-in Customer
 exports.getUserOrders = async (req, res) => {
@@ -66,72 +67,107 @@ exports.getRestaurantOrders = async (req, res) => {
   };
   
 // Create a New Order
+// Create a New Order
 exports.createOrder = async (req, res) => {
-    try {
-      const { restaurantId, totalAmount, items, paymentMethod, deliveryAddress } = req.body;
-  
-      const restaurant = await Restaurant.findById(restaurantId);
-      if (!restaurant) {
-        return res.status(404).json({ message: "Restaurant not found" });
-      }
-  
-      const itemsWithNames = await Promise.all(
-        items.map(async (item) => {
-          const dish = await Dish.findById(item.dishId);
-          return {
-            dishId: item.dishId,
-            dishName: dish ? dish.name : "Unknown Dish",
-            quantity: item.quantity
-          };
-        })
-      );
-  
-      const newOrder = new Order({
-        userId: req.user.id,
-        userEmail: req.user.email,
-        restaurantId,
-        restaurantName: restaurant.name,
-        totalAmount,
-        status: "New",
-        estimatedDeliveryTime: "30 min",
-        paymentMethod,
-        items: itemsWithNames,
-        deliveryAddress
-      });
-  
-      await newOrder.save();
-  
-      res.status(201).json({ message: "Order placed successfully", order: newOrder });
-    } catch (error) {
-      console.error("Error in order creation:", error);
-      res.status(500).json({ error: error.message });
+  try {
+    const { restaurantId, totalAmount, items, paymentMethod, deliveryAddress } = req.body;
+
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
     }
-  };
+
+    const itemsWithNames = await Promise.all(
+      items.map(async (item) => {
+        const dish = await Dish.findById(item.dishId);
+        return {
+          dishId: item.dishId,
+          dishName: dish ? dish.name : "Unknown Dish",
+          quantity: item.quantity
+        };
+      })
+    );
+
+    const newOrder = new Order({
+      userId: req.user.id,
+      userEmail: req.user.email,
+      restaurantId,
+      restaurantName: restaurant.name,
+      totalAmount,
+      status: "New",
+      estimatedDeliveryTime: "30 min",
+      paymentMethod,
+      items: itemsWithNames,
+      deliveryAddress
+    });
+
+    await newOrder.save();
+
+    // ✅ SINGLE Kafka Event
+    await producer.send({
+      topic: "order-events",
+      messages: [
+        {
+          key: "order_created",
+          value: JSON.stringify({
+            type: "ORDER_CREATED",
+            orderId: newOrder._id.toString(),
+            restaurantId: newOrder.restaurantId.toString(),
+            timestamp: new Date().toISOString(),
+          }),
+        },
+      ],
+    });
+
+    res.status(201).json({ message: "Order placed successfully", order: newOrder });
+
+  } catch (error) {
+    console.error("Error in order creation:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
   
 // Update Order Status (Restaurant Only)
 exports.updateOrderStatus = async (req, res) => {
-    try {
-      if (!req.restaurant) {
-        return res.status(403).json({ error: "Only restaurants can update orders" });
-      }
-  
-      const { orderId } = req.params;
-      const { status } = req.body;
-  
-      const order = await Order.findById(orderId);
-      if (!order) {
-        return res.status(404).json({ error: "Order not found" });
-      }
-  
-      order.status = status;
-      await order.save();
-  
-      res.json({ message: "Order status updated successfully", order });
-    } catch (error) {
-      console.error("Error updating order:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+  try {
+    if (!req.restaurant) {
+      return res.status(403).json({ error: "Only restaurants can update orders" });
     }
-  };
+
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    order.status = status;
+    await order.save();
+
+    // 🔥 Kafka Message
+    await producer.send({
+      topic: "order-events",
+      messages: [
+        {
+          key: `order-${status.toLowerCase().replace(/\s+/g, '-')}`,
+          value: JSON.stringify({
+            type: `ORDER_${status.toUpperCase().replace(/\s+/g, '_')}`,
+            orderId: order._id.toString(),
+            restaurantId: order.restaurantId.toString(),
+            status,
+            timestamp: Date.now(),
+          }),
+        },
+      ],
+    });
+
+    res.json({ message: `Order status updated to ${status}`, order });
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
   
 
 // Cancel an Order
