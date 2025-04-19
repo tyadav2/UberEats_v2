@@ -1,12 +1,10 @@
 const { Kafka } = require('kafkajs');
 
-// Create Kafka client instance
 const kafka = new Kafka({
   clientId: 'uber-eats-backend',
-  brokers: ['localhost:9092'], // change if you're using a remote broker
+  brokers: ['localhost:9092'],
 });
 
-// Create Kafka producer
 const producer = kafka.producer();
 
 // Create Kafka consumer (for restaurant-side processing)

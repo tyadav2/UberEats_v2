@@ -103,7 +103,7 @@ exports.createOrder = async (req, res) => {
 
     await newOrder.save();
 
-    // ✅ SINGLE Kafka Event
+    // SINGLE Kafka Event
     await producer.send({
       topic: "order-events",
       messages: [
@@ -145,7 +145,7 @@ exports.updateOrderStatus = async (req, res) => {
     order.status = status;
     await order.save();
 
-    // 🔥 Kafka Message
+    // Kafka Message
     await producer.send({
       topic: "order-events",
       messages: [

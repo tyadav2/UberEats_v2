@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
     await producer.connect();
     console.log("Kafka Producer Connected");
 
-    await runConsumer(); // ✅ Await this
+    await runConsumer();
     console.log("Kafka Consumer Running");
 
     // Start Express server after Kafka connects
