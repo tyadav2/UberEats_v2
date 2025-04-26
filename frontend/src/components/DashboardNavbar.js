@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
+import { logout } from "../redux/slices/authSlice.js";
 import ToggleButtons from "./ToggleButtons.js";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -20,6 +22,7 @@ import {
 
 function DashboardNavbar() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [address, setAddress] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -65,6 +68,9 @@ function DashboardNavbar() {
     localStorage.clear();
     localStorage.removeItem("customerToken");
     localStorage.removeItem("user");
+    // Redux logout
+    dispatch(logout());
+
     toast.success('Successfully logged out!', {
       position: "top-right",
       autoClose: 2000,
