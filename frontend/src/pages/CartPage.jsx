@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DashboardNavbar from '../components/DashboardNavbar';
@@ -21,8 +21,6 @@ const CartPage = () => {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const navigate = useNavigate();
-
- 
 
   const updateQuantity = (itemId, newQuantity) => {
     if (newQuantity < 1) return;
@@ -125,7 +123,7 @@ const CartPage = () => {
         deliveryAddress: isPickup ? null : deliveryAddress
       });
   
-      const response = await axios.post("http://localhost:5000/api/orders", orderData, {
+      await axios.post("http://localhost:5000/api/orders", orderData, {
         headers: { Authorization: `Bearer ${token}` }
       });
   
