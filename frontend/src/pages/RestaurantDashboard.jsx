@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
-
+import {logout} from "../redux/slices/authSlice";
+import { useDispatch } from "react-redux";
 
 const RestaurantDashboard = () => {
     const [restaurant, setRestaurant] = useState(null);
@@ -17,22 +18,10 @@ const RestaurantDashboard = () => {
     const [orderDetails, setOrderDetails] = useState(null);
 
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const token = useSelector((state) => state.auth.token);
 
-
-    useEffect(() => {
-        if (!token) {
-            console.error("No token found! Redirecting to login.");
-            navigate("/restaurant/login");
-            return;
-        }
-        fetchRestaurantProfile();
-        fetchDishes();
-        fetchOrders();
-    }, []);
-
-    // Fetch restaurant profile
-    const fetchRestaurantProfile = async () => {
+    const fetchRestaurantProfile = useCallback(async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/restaurants/profile", {
                 headers: { Authorization: `Bearer ${token}` },
@@ -44,10 +33,10 @@ const RestaurantDashboard = () => {
             alert("Authentication failed! Please log in again.");
             navigate("/restaurant/login");
         }
-    };
+    }, [token, navigate]);
 
     // Fetch dishes
-    const fetchDishes = async () => {
+    const fetchDishes = useCallback(async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/dishes", {
                 headers: { Authorization: `Bearer ${token}` },
@@ -56,10 +45,10 @@ const RestaurantDashboard = () => {
         } catch (error) {
             console.error("Error fetching dishes:", error);
         }
-    };
+    }, [token]);
 
     // Fetch dish details
-    const fetchDishDetails = async (dishId) => {
+    const fetchDishDetails = useCallback(async (dishId) => {
         try {
             const response = await axios.get(`http://localhost:5000/api/dishes/${dishId}`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -69,10 +58,10 @@ const RestaurantDashboard = () => {
             console.error(`Error fetching details for dish ${dishId}:`, error);
             return null;
         }
-    };
+    }, [token]);
 
     // Fetch orders
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/orders/restaurant", {
                 headers: { Authorization: `Bearer ${token}` },
@@ -105,7 +94,18 @@ const RestaurantDashboard = () => {
         } catch (error) {
             console.error("Error fetching orders:", error);
         }
-    };
+    }, [token, fetchDishDetails]);
+
+    useEffect(() => {
+        if (!token) {
+            console.error("No token found! Redirecting to login.");
+            navigate("/restaurant/login");
+            return;
+        }
+        fetchRestaurantProfile();
+        fetchDishes();
+        fetchOrders();
+    }, [token, navigate, fetchRestaurantProfile, fetchDishes, fetchOrders]);
     
 
     // Update order status
@@ -277,6 +277,7 @@ const RestaurantDashboard = () => {
     // Logout
     const handleLogout = () => {
         localStorage.removeItem("restaurantToken");
+        dispatch(logout());
         navigate("/restaurant/login");
     };
 
