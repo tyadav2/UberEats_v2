@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FaHeart } from 'react-icons/fa';
 import DashboardNavbar from '../components/DashboardNavbar';
@@ -11,11 +11,7 @@ function Favorites() {
   const navigate = useNavigate();
   const token = JSON.parse(localStorage.getItem("customerToken"));
 
-  useEffect(() => {
-    fetchFavorites();
-  }, []);
-
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/favorites', {
         headers: {
@@ -28,7 +24,11 @@ function Favorites() {
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
-  };
+  }, [token]); 
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]); 
 
   const toggleFavorite = async (e, restaurantId) => {
     e.stopPropagation(); // Prevent navigation to restaurant details
