@@ -25,7 +25,7 @@ const RestaurantLogin = () => {
             role: 'restaurant',
           }));
       
-          alert(response.data.message);
+          //alert(response.data.message);
           navigate('/restaurant/dashboard');
         } catch (error) {
           alert('Error: ' + (error.response?.data?.message || 'Login failed!'));
