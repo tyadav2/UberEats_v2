@@ -16,14 +16,13 @@ function Login() {
       const apiUrl = "http://localhost:5000/api/users/login";
       const response = await axios.post(apiUrl, { email, password });
 
-      // ✅ Save to localStorage (optional for persistence)
       localStorage.setItem("customerToken", JSON.stringify(response.data.token));
 
-      // ✅ Dispatch to Redux store
+      // Dispatch to Redux store
       dispatch(login({ token: response.data.token, user: response.data.user }));
 
       console.log("Customer login successful:", response.data);
-      alert("Login successful!");
+      //alert("Login successful!");
 
       navigate("/dashboard");
     } catch (error) {
