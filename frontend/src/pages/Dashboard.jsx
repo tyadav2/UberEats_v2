@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Slider from 'react-slick';
 import DashboardNavbar from '../components/DashboardNavbar';
@@ -15,15 +15,9 @@ function Dashboard() {
   const [sortOrder, setSortOrder] = useState("default");
   const [activeCategory, setActiveCategory] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchRestaurants();
-    fetchFavorites();
-  }, []);
-
   const token = JSON.parse(localStorage.getItem("customerToken"));
 
-  const fetchRestaurants = async () => {
+  const fetchRestaurants = useCallback(async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/restaurants');
       setRestaurants(response.data);
@@ -31,9 +25,9 @@ function Dashboard() {
     } catch (error) {
       console.error('Error fetching restaurants:', error);
     }
-  };
+  }, []);
 
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/favorites', {
         headers: {
@@ -46,7 +40,12 @@ function Dashboard() {
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchRestaurants();
+    fetchFavorites();
+  }, [fetchRestaurants, fetchFavorites]);
 
   const toggleFavorite = async (e, restaurantId) => {
     e.stopPropagation(); // Prevent navigation to restaurant details
@@ -370,43 +369,43 @@ function Dashboard() {
             <div>
               <h3 className="text-lg font-bold mb-4">Uber Eats</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-300 hover:text-white">About us</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Become a partner</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Add your restaurant</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Sign up to deliver</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">About us</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Become a partner</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Add your restaurant</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Sign up to deliver</a></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-lg font-bold mb-4">Get Help</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-300 hover:text-white">View all cities</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Restaurants near me</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">English</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Help</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">View all cities</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Restaurants near me</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">English</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Help</a></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-lg font-bold mb-4">Uber</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-300 hover:text-white">Ride</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Drive</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Uber for Business</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Uber Freight</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Ride</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Drive</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Uber for Business</a></li>
+                <li><a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">Uber Freight</a></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-lg font-bold mb-4">Follow Us</h3>
               <div className="flex space-x-4 text-2xl">
-                <a href="#" className="text-gray-300 hover:text-white">
+                <a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">
                   <i className="fab fa-facebook"></i>
                 </a>
-                <a href="#" className="text-gray-300 hover:text-white">
+                <a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">
                   <i className="fab fa-twitter"></i>
                 </a>
-                <a href="#" className="text-gray-300 hover:text-white">
+                <a href="https://about.ubereats.com/" className="text-gray-300 hover:text-white">
                   <i className="fab fa-instagram"></i>
                 </a>
               </div>
@@ -428,9 +427,9 @@ function Dashboard() {
           <div className="border-t border-gray-800 mt-8 pt-8 text-sm text-gray-400">
             <div className="flex flex-wrap justify-between items-center">
               <div className="flex space-x-4 mb-4 md:mb-0">
-                <a href="#" className="hover:text-white">Privacy Policy</a>
-                <a href="#" className="hover:text-white">Terms of Service</a>
-                <a href="#" className="hover:text-white">Pricing</a>
+                <a href="https://about.ubereats.com/" className="hover:text-white">Privacy Policy</a>
+                <a href="https://about.ubereats.com/" className="hover:text-white">Terms of Service</a>
+                <a href="https://about.ubereats.com/" className="hover:text-white">Pricing</a>
               </div>
               <div>
                 © 2025 Uber Technologies Inc. Lab Assignment
