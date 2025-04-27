@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import {logout} from "../redux/slices/authSlice";
 import { useDispatch } from "react-redux";
+import { useRestaurantWebSocket } from "../hooks/useRestaurantWebSocket";
+
 
 const RestaurantDashboard = () => {
     const [restaurant, setRestaurant] = useState(null);
@@ -23,6 +25,7 @@ const RestaurantDashboard = () => {
     //const token = useSelector((state) => state.auth.token);
     const auth = useSelector((state) => state.auth);
     const token = auth?.token || localStorage.getItem("restaurantToken");
+
 
     const fetchRestaurantProfile = useCallback(async () => {
         try {
@@ -62,6 +65,90 @@ const RestaurantDashboard = () => {
             return null;
         }
     }, [token]);
+
+
+
+    const handleNewOrder = useCallback(async (data) => {
+        console.log("Received new order via WebSocket:", data);
+        try {
+            // Process the new order with dish details
+            const itemsWithDetails = await Promise.all(data.order.items.map(async (item) => {
+                const dishDetails = await fetchDishDetails(item.dishId);
+                return {
+                    ...item,
+                    dishName: dishDetails ? dishDetails.name : `Dish #${item.dishId}`,
+                    price: dishDetails ? dishDetails.price : 0,
+                    image: dishDetails ? dishDetails.image : null
+                };
+            }));
+            
+            const enhancedOrder = {
+                ...data.order,
+                items: itemsWithDetails
+            };
+            
+            console.log("Enhanced order:", enhancedOrder);
+            
+            // Add the new order to the orders state
+            setOrders(prevOrders => {
+                console.log("Previous orders:", prevOrders);
+                console.log("Adding new order, new state will be:", [enhancedOrder, ...prevOrders]);
+                return [enhancedOrder, ...prevOrders];
+            });
+            
+            // Show notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded shadow-lg z-50 animate-fade-in';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <span class="font-bold">New Order #${data.order._id.slice(-6)}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-dismiss notification
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+            
+            // If on orders tab, update immediately
+            if (activeTab === "orders") {
+                setOrderDetails(null);
+            }
+        } catch (error) {
+            console.error("Error processing new order:", error);
+        }
+    }, [fetchDishDetails, activeTab]);
+
+    // Connect to WebSocket
+    //useRestaurantWebSocket(restaurant?._id, handleNewOrder);
+
+        // Add this useEffect to manage WebSocket connection
+        useEffect(() => {
+            // Only establish WebSocket connection after restaurant data is loaded
+            if (restaurant && restaurant._id) {
+                console.log("Restaurant data loaded, establishing WebSocket connection");
+            }
+        }, [restaurant]);
+    
+        // Remove the standalone useRestaurantWebSocket hook call and replace it with this:
+        const [webSocketConnected, setWebSocketConnected] = useState(false);
+    
+        useEffect(() => {
+            if (restaurant && restaurant._id && !webSocketConnected) {
+                setWebSocketConnected(true);
+            }
+        }, [restaurant, webSocketConnected]);
+    
+        // Only use WebSocket when restaurant data is available
+        useRestaurantWebSocket(webSocketConnected ? restaurant._id : null, handleNewOrder);
+    
+    
 
     // Fetch orders
     const fetchOrders = useCallback(async () => {

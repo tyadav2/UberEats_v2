@@ -1,7 +1,7 @@
 const { consumer } = require('../config/kafka');
 const Order = require('../models/Order');
 
-const runConsumer = async (wsServer) => { // Pass WebSocket server instance
+const runConsumer = async (wsServer) => {
   await consumer.connect();
   await consumer.subscribe({ topic: 'order-events', fromBeginning: true });
 
@@ -19,7 +19,24 @@ const runConsumer = async (wsServer) => { // Pass WebSocket server instance
 
         switch (event.type) {
           case 'ORDER_CREATED':
+            console.log(`Processing ORDER_CREATED for order ${order._id}`);
+            console.log(`Restaurant ID: ${order.restaurantId}`);
+            
+            // Notify the restaurant about new order
+            if (wsServer) {
+              const notificationData = {
+                type: 'NEW_ORDER',
+                orderId: order._id,
+                order: order,
+                timestamp: new Date().toISOString()
+              };
+              console.log('Sending notification to restaurant:', notificationData);
+              wsServer.sendToRestaurant(order.restaurantId.toString(), notificationData);
+            } else {
+              console.error('wsServer not available');
+            }
             break;
+
           case 'ORDER_PREPARING':
           case 'ORDER_PICK_UP_READY':
           case 'ORDER_ON_THE_WAY':
@@ -39,6 +56,7 @@ const runConsumer = async (wsServer) => { // Pass WebSocket server instance
               });
             }
             break;
+
           default:
             console.warn('Unknown event type:', event.type);
         }
