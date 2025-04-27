@@ -18,7 +18,7 @@
       </elementProp>
     </TestPlan>
     <hashTree>
-      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Test Data Setup" enabled="false">
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Test Data Setup">
         <intProp name="ThreadGroup.num_threads">1</intProp>
         <intProp name="ThreadGroup.ramp_time">1</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
@@ -59,7 +59,7 @@
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
             <collectionProp name="HeaderManager.headers">
               <elementProp name="" elementType="Header">
                 <stringProp name="Header.name">Content-Type</stringProp>
@@ -98,19 +98,19 @@
             </collectionProp>
           </HeaderManager>
           <hashTree/>
-          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract Restaurant ID" enabled="true">
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract Restaurant ID">
             <stringProp name="JSONPostProcessor.referenceNames">restaurant_id</stringProp>
             <stringProp name="JSONPostProcessor.jsonPathExprs">$.restaurant.id</stringProp>
             <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
           </JSONPostProcessor>
           <hashTree/>
-          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract Restaurant Token" enabled="true">
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extract Restaurant Token">
             <stringProp name="JSONPostProcessor.referenceNames">restaurant_token</stringProp>
             <stringProp name="JSONPostProcessor.jsonPathExprs">$.token</stringProp>
             <stringProp name="JSONPostProcessor.match_numbers">1</stringProp>
           </JSONPostProcessor>
           <hashTree/>
-          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Set Global Restaurant Data" enabled="true">
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Set Global Restaurant Data">
             <stringProp name="script">
               props.put(&quot;global_restaurant_id&quot;, vars.get(&quot;restaurant_id&quot;));
               props.put(&quot;global_restaurant_token&quot;, vars.get(&quot;restaurant_token&quot;));
@@ -299,8 +299,8 @@ if (vars.get(&quot;user_email&quot;) == null) {
         <hashTree/>
       </hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Restaurant Test" enabled="false">
-        <intProp name="ThreadGroup.num_threads">120</intProp>
-        <intProp name="ThreadGroup.ramp_time">15</intProp>
+        <intProp name="ThreadGroup.num_threads">100</intProp>
+        <intProp name="ThreadGroup.ramp_time">30</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
@@ -450,8 +450,8 @@ if (vars.get(&quot;restaurant_email&quot;) == null) {
         <hashTree/>
       </hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Order Processing - Concurrent Users">
-        <intProp name="ThreadGroup.num_threads">75</intProp>
-        <intProp name="ThreadGroup.ramp_time">20</intProp>
+        <intProp name="ThreadGroup.num_threads">100</intProp>
+        <intProp name="ThreadGroup.ramp_time">30</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController">
@@ -463,16 +463,26 @@ if (vars.get(&quot;restaurant_email&quot;) == null) {
         <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Generate Unique Order User">
           <stringProp name="scriptLanguage">groovy</stringProp>
           <stringProp name="cacheKey">false</stringProp>
-          <stringProp name="script">
-            String timestamp = System.currentTimeMillis().toString();
-            String threadNum = ctx.getThreadNum().toString();
-            
-            String email = &quot;order_user_&quot; + threadNum + &quot;@example.com&quot;;
-            String password = &quot;orderpass_&quot;;
-            
-            vars.put(&quot;order_user_email&quot;, email);
-            vars.put(&quot;order_user_password&quot;, password);
-          </stringProp>
+          <stringProp name="script">// Check if variables already exist for this thread
+if (vars.get(&quot;order_user_email&quot;) == null) {
+    String threadNum = ctx.getThreadNum().toString();
+    String iterationNum = vars.getIteration() != null ? vars.getIteration().toString() : &quot;0&quot;;
+    String uniqueId = UUID.randomUUID().toString().substring(0, 8);
+    String uniqueKey = threadNum + &quot;_&quot; + iterationNum;
+    
+    String email = &quot;user_&quot; + uniqueKey + &quot;_&quot; + uniqueId + iterationNum + &quot;@example.com&quot;;
+    String password = &quot;pass_&quot; + uniqueKey;
+
+    
+    vars.put(&quot;order_user_email&quot;, email);
+    vars.put(&quot;order_user_password&quot;, password);
+
+   
+} else {
+    log.info(&quot;REUSING existing user variables for thread &quot; + ctx.getThreadNum());
+    log.info(&quot;User email: &quot; + vars.get(&quot;order_user_email&quot;));
+    log.info(&quot;User password: &quot; + vars.get(&quot;order_user_password&quot;));
+}</stringProp>
           <stringProp name="parameters"></stringProp>
           <stringProp name="filename"></stringProp>
         </JSR223PreProcessor>
@@ -548,6 +558,18 @@ if (vars.get(&quot;restaurant_email&quot;) == null) {
           </JSONPostProcessor>
           <hashTree/>
         </hashTree>
+        <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Generate Unique Order and Restaurant" enabled="false">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">String restaurantId = props.get(&quot;global_restaurant_id&quot;);
+String dishId = props.get(&quot;global_dish_id&quot;);
+
+vars.put(&quot;restaurant_id&quot;, restaurantId);
+vars.put(&quot;dish_id&quot;, dishId);</stringProp>
+        </JSR223PreProcessor>
+        <hashTree/>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Place Order">
           <stringProp name="HTTPSampler.domain">${BASE_URL}</stringProp>
           <stringProp name="HTTPSampler.port">${PORT}</stringProp>
