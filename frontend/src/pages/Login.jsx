@@ -19,7 +19,11 @@ function Login() {
       localStorage.setItem("customerToken", JSON.stringify(response.data.token));
 
       // Dispatch to Redux store
-      dispatch(login({ token: response.data.token, user: response.data.user }));
+      dispatch(login({ 
+        token: response.data.token, 
+        user: response.data.user || { email },
+        role: 'customer',
+      }));
 
       console.log("Customer login successful:", response.data);
       //alert("Login successful!");
