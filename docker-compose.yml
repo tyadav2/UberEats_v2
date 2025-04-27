@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://host.docker.internal:27017/ubereats
+      - KAFKA_BROKER=host.docker.internal:9092
+    depends_on:
+      - frontend
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - WDS_SOCKET_PORT=0  # Helps React dev server inside Docker
