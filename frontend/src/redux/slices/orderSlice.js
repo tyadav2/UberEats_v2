@@ -25,9 +25,14 @@ const orderSlice = createSlice({
       const existingItemIndex = state.cartItems.findIndex(item => item._id === newItem._id);
       
       if (existingItemIndex !== -1) {
-        state.cartItems[existingItemIndex].quantity += 1;
+        // If quantity is provided, use it, otherwise increment by 1
+        if (newItem.quantity) {
+          state.cartItems[existingItemIndex].quantity = newItem.quantity;
+        } else {
+          state.cartItems[existingItemIndex].quantity += 1;
+        }
       } else {
-        state.cartItems.push({ ...newItem, quantity: 1 });
+        state.cartItems.push({ ...newItem, quantity: newItem.quantity || 1 });
       }
     },
     removeFromCart: (state, action) => {
@@ -43,6 +48,10 @@ const orderSlice = createSlice({
           state.cartItems[existingItemIndex].quantity -= 1;
         }
       }
+    },
+    removeItemCompletely: (state, action) => {
+      const { id } = action.payload;
+      state.cartItems = state.cartItems.filter(item => item._id !== id);
     },
     clearCart(state) {
       state.cartItems = [];
@@ -80,6 +89,7 @@ const orderSlice = createSlice({
 export const { 
   addToCart, 
   removeFromCart, 
+  removeItemCompletely,
   clearCart, 
   setOrderStatus,
   cancelOrderStart,
