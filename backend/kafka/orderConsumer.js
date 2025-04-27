@@ -1,7 +1,7 @@
 const { consumer } = require('../config/kafka');
 const Order = require('../models/Order');
 
-const runConsumer = async () => {
+const runConsumer = async (wsServer) => { // Pass WebSocket server instance
   await consumer.connect();
   await consumer.subscribe({ topic: 'order-events', fromBeginning: true });
 
@@ -28,6 +28,16 @@ const runConsumer = async () => {
             order.status = event.status;
             await order.save();
             console.log(`Order ${order._id} updated to ${event.status}`);
+            
+            // Send real-time update to the user
+            if (wsServer) {
+              wsServer.sendToUser(order.userId.toString(), {
+                type: 'ORDER_UPDATE',
+                orderId: order._id,
+                status: event.status,
+                timestamp: new Date().toISOString()
+              });
+            }
             break;
           default:
             console.warn('Unknown event type:', event.type);

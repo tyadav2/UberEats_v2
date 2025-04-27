@@ -18,16 +18,22 @@ function Login() {
 
       localStorage.setItem("customerToken", JSON.stringify(response.data.token));
 
-      // Dispatch to Redux store
+      // First, get user profile to get ID
+      const profileResponse = await axios.get("http://localhost:5000/api/users/profile", {
+        headers: { Authorization: `Bearer ${response.data.token}` }
+      });
+
+      // Dispatch to Redux store with user ID
       dispatch(login({ 
         token: response.data.token, 
-        user: response.data.user || { email },
+        user: { 
+          ...profileResponse.data,
+          id: profileResponse.data._id 
+        },
         role: 'customer',
       }));
 
       console.log("Customer login successful:", response.data);
-      //alert("Login successful!");
-
       navigate("/dashboard");
     } catch (error) {
       console.error("Login failed:", error);

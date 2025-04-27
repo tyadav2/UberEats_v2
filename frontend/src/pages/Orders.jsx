@@ -1,16 +1,28 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ClockIcon, TruckIcon, CheckCircleIcon, XCircleIcon } from "lucide-react";
 import DashboardNavbar from "../components/DashboardNavbar";
 import { fetchOrders, cancelOrder } from "../redux/slices/orderSlice";
-import axios from "axios";
+import { useWebSocket } from "../hooks/useWebSocket"; // Add this import
 
 function Orders() {
   const dispatch = useDispatch();
   const { orders, loading, error } = useSelector((state) => state.order);
-  const { token } = useSelector((state) => state.persistedReducer.auth);
+  const { token, user } = useSelector((state) => state.persistedReducer.auth);
   const navigate = useNavigate();
+
+  // Handle real-time order updates
+  const handleOrderUpdate = useCallback((data) => {
+    // Update the orders state with the new status
+    dispatch({
+      type: 'order/updateOrderStatus',
+      payload: { orderId: data.orderId, status: data.status }
+    });
+  }, [dispatch]);
+
+  // Establish WebSocket connection
+  useWebSocket(user?.id, handleOrderUpdate);
 
   useEffect(() => {
     if (token) {
@@ -183,7 +195,7 @@ function Orders() {
                     </span>
                   </div>
                   
-                  {(order.status === "Preparing" || order.status === "Pending" || order.status === "On the way") && (
+                  {(order.status === "New" || order.status === "Preparing" || order.status === "Pending" || order.status === "On the way") && (
                     <button
                       onClick={() => handleCancelOrder(order._id)}
                       className="mt-3 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"

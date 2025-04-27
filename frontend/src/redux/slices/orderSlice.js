@@ -13,33 +13,38 @@ const orderSlice = createSlice({
   name: 'order',
   initialState,
   reducers: {
-    
-addToCart: (state, action) => {
-  const newItem = action.payload;
-  const existingItemIndex = state.cartItems.findIndex(item => item._id === newItem._id);
-  
-  if (existingItemIndex !== -1) {
-    state.cartItems[existingItemIndex].quantity += 1;
-  } else {
-    state.cartItems.push({ ...newItem, quantity: 1 });
-  }
-},
-
-removeFromCart: (state, action) => {
-  const { id } = action.payload;
-  const existingItemIndex = state.cartItems.findIndex(item => item._id === id);
-  
-  if (existingItemIndex !== -1) {
-    const existingItem = state.cartItems[existingItemIndex];
-    
-    if (existingItem.quantity === 1) {
-      state.cartItems = state.cartItems.filter(item => item._id !== id);
-    } else {
-      state.cartItems[existingItemIndex].quantity -= 1;
-    }
-  }
-},
-      clearCart(state) {
+    updateOrderStatus: (state, action) => {
+      const { orderId, status } = action.payload;
+      const orderIndex = state.orders.findIndex(order => order._id === orderId);
+      if (orderIndex !== -1) {
+        state.orders[orderIndex].status = status;
+      }
+    },
+    addToCart: (state, action) => {
+      const newItem = action.payload;
+      const existingItemIndex = state.cartItems.findIndex(item => item._id === newItem._id);
+      
+      if (existingItemIndex !== -1) {
+        state.cartItems[existingItemIndex].quantity += 1;
+      } else {
+        state.cartItems.push({ ...newItem, quantity: 1 });
+      }
+    },
+    removeFromCart: (state, action) => {
+      const { id } = action.payload;
+      const existingItemIndex = state.cartItems.findIndex(item => item._id === id);
+      
+      if (existingItemIndex !== -1) {
+        const existingItem = state.cartItems[existingItemIndex];
+        
+        if (existingItem.quantity === 1) {
+          state.cartItems = state.cartItems.filter(item => item._id !== id);
+        } else {
+          state.cartItems[existingItemIndex].quantity -= 1;
+        }
+      }
+    },
+    clearCart(state) {
       state.cartItems = [];
     },
     setOrderStatus(state, action) {
@@ -82,7 +87,8 @@ export const {
   cancelOrderFailure,
   fetchOrdersStart,
   fetchOrdersSuccess,
-  fetchOrdersFailure
+  fetchOrdersFailure,
+  updateOrderStatus
 } = orderSlice.actions;
 
 // Thunk action to fetch orders using Redux auth state
