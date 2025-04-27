@@ -68,27 +68,37 @@ exports.getUserProfile = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name } = req.body;
+    const { name, email, country, state, phoneNumber, dob, profilePic, city } = req.body;
 
-    let profilePicUrl = null;
-    if (req.file) {
-      profilePicUrl = `/uploads/${req.file.filename}`;
-    }
+    const updatedFields = {};
+    
+    if (name) updatedFields.name = name;
+    if (email) updatedFields.email = email;
+    if (country) updatedFields.country = country;
+    if (state) updatedFields.state = state;
+    if (phoneNumber) updatedFields.phoneNumber = phoneNumber;
+    if (dob) updatedFields.dob = dob;
+    if (profilePic) updatedFields.profilePic = profilePic;
+    if (city) updatedFields.city = city; // Add city field
 
-    const updatedFields = {
-      ...(name && { name }),
-      ...(profilePicUrl && { profilePic: profilePicUrl })
-    };
+    console.log("Updating user with fields:", updatedFields);
 
-    const updatedUser = await User.findByIdAndUpdate(userId, { $set: updatedFields }, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId, 
+      { $set: updatedFields }, 
+      { new: true }
+    );
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ message: "Profile updated successfully", user: updatedUser });
+    res.json({ 
+      message: "Profile updated successfully", 
+      user: updatedUser 
+    });
   } catch (error) {
     console.error("Error updating profile:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
