@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
   country: { type: String, maxlength: 100 },
   phoneNumber: { type: String, maxlength: 15 },
   dob: { type: Date },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  profilePic: { type: String } // URL to the profile picture
 }, {
   timestamps: true
 });
