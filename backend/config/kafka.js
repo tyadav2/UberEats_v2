@@ -2,7 +2,7 @@ const { Kafka } = require('kafkajs');
 
 const kafka = new Kafka({
   clientId: 'uber-eats-backend',
-  brokers: ['host.docker.internal:9092'],
+  brokers: ['kafka:9092'],
 });
 
 const producer = kafka.producer();
