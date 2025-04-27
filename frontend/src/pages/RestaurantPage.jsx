@@ -47,22 +47,26 @@ const RestaurantPage = () => {
     fetchRestaurantAndDishes();
   }, [restaurantId]);
 
+useEffect(() => {
+  console.log("Cart updated:", cart);
+}, [cart]);
 
 
+const addToCartHandler = (dish) => {
+  dispatch(addToCart({ ...dish, restaurantId }));
+};
+   
+const removeFromCartHandler = (dish) => {
+  console.log("Removing dish:", dish._id); // Debug log
+  dispatch(removeFromCart({ id: dish._id }));
+};
 
-  const addToCartHandler = (dish) => {
-    dispatch(addToCart({ ...dish, restaurantId, quantity: 1 }));
-  };
-
-  const removeFromCartHandler = (dish) => {
-    dispatch(removeFromCart({ id: dish._id }));
-  };
-
-  // Function to get quantity of item in cart
-  const getItemQuantity = (dishId) => {
-    const item = cart.find(item => item._id === dishId);
-    return item ? item.quantity : 0;
-  };
+const getItemQuantity = (dishId) => {
+  const item = cart.find(item => item._id === dishId);
+  const quantity = item ? item.quantity : 0;
+  console.log(`Dish ${dishId} quantity:`, quantity); // Debug log
+  return quantity;
+};
 
   // If loading, show loader
   if (loading) return (
@@ -205,8 +209,7 @@ const RestaurantPage = () => {
                         </svg>
                         <span>Add to Cart</span>
                       </button>
-                    )}
-                  </div>
+                    )}                  </div>
                 </div>
               ))}
             </div>
