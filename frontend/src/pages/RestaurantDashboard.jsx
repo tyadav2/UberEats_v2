@@ -19,7 +19,10 @@ const RestaurantDashboard = () => {
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const token = useSelector((state) => state.auth.token);
+    
+    //const token = useSelector((state) => state.auth.token);
+    const auth = useSelector((state) => state.auth);
+    const token = auth?.token || localStorage.getItem("restaurantToken");
 
     const fetchRestaurantProfile = useCallback(async () => {
         try {

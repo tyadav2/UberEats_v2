@@ -18,6 +18,12 @@ const RestaurantLogin = () => {
       
         try {
           const response = await axios.post('http://localhost:5000/api/restaurants/login', data);
+
+          if (!response.data.token) {
+            throw new Error('Token not found in response');
+          }
+
+          localStorage.setItem('restaurantToken', response.data.token);
       
           dispatch(login({
             token: response.data.token,
