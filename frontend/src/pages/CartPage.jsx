@@ -5,6 +5,7 @@ import DashboardNavbar from '../components/DashboardNavbar';
 import { useSelector, useDispatch } from "react-redux";
 import {
   removeFromCart,
+  removeItemCompletely,
   clearCart,
   addToCart,
 } from "../redux/slices/orderSlice";
@@ -27,13 +28,14 @@ const CartPage = () => {
   
     const item = cartItems.find((i) => i._id === itemId);
     if (item) {
-      dispatch(removeFromCart({ id: item._id }));
+      // Directly update the item with the new quantity
       dispatch(addToCart({ ...item, quantity: newQuantity }));
     }
   };
 
   const removeItem = (itemId) => {
-    dispatch(removeFromCart({ id: itemId }));
+    // Use the new action to completely remove the item
+    dispatch(removeItemCompletely({ id: itemId }));
   };
 
   // Address Lookup Feature
