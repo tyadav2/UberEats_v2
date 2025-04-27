@@ -197,6 +197,13 @@ const RestaurantDashboard = () => {
         fetchOrders();
     }, [token, navigate, fetchRestaurantProfile, fetchDishes, fetchOrders]);
     
+    useEffect(() => {
+        if (activeTab === "orders") {
+            const interval = setInterval(fetchOrders, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [activeTab, fetchOrders]);
+    
 
     // Update order status
     const updateOrderStatus = async (orderId, newStatus) => {
