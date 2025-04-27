@@ -1,60 +1,27 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ClockIcon, TruckIcon, CheckCircleIcon, XCircleIcon } from "lucide-react";
-
-// Assuming you have this component in your project
 import DashboardNavbar from "../components/DashboardNavbar";
+import { fetchOrders, cancelOrder } from "../redux/slices/orderSlice";
+import axios from "axios";
 
 function Orders() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const { orders, loading, error } = useSelector((state) => state.order);
+  const { token } = useSelector((state) => state.persistedReducer.auth);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("customerToken");
-      if (!token) {
-        setError("You must be logged in to view orders");
-        setLoading(false);
-        return;
-      }
-
-      const parsedToken = JSON.parse(token);
-      const response = await axios.get("http://localhost:5000/api/orders", {
-        headers: { Authorization: `Bearer ${parsedToken}` },
-      });
-
-      setOrders(response.data);
-      setError(null);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setError("Failed to load your orders. Please try again later.");
-    } finally {
-      setLoading(false);
+    if (token) {
+      dispatch(fetchOrders());
     }
-  };
+  }, [dispatch, token]);
 
   const handleCancelOrder = async (orderId) => {
-    try {
-      const token = JSON.parse(localStorage.getItem("customerToken"));
-      if (!token) {
-        setError("Unauthorized. Please log in.");
-        return;
-      }
-
-      await axios.delete(`http://localhost:5000/api/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setOrders((prevOrders) => prevOrders.filter(order => order._id !== orderId));
-      
+    const success = await dispatch(cancelOrder(orderId));
+    
+    if (success) {
       // Using browser notification instead of alert for better UX
       const notification = document.createElement('div');
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded shadow-lg z-50 animate-fade-in-out';
@@ -64,10 +31,6 @@ function Orders() {
       setTimeout(() => {
         notification.remove();
       }, 3000);
-      
-    } catch (error) {
-      console.error("Error canceling order:", error);
-      setError("Failed to cancel order. Please try again later.");
     }
   };
 
