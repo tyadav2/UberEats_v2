@@ -1,28 +1,26 @@
-# Dockerfile for Frontend
+# Stage 1: Build Stage
+FROM node:18-alpine AS builder
 
-# 1. Use official Node.js image
-FROM node:18
-
-# 2. Set working directory
 WORKDIR /app
 
-# 3. Copy package.json and package-lock.json first
 COPY package*.json ./
-
-# 4. Install frontend dependencies
 RUN npm install
 
-# 5. Copy the rest of the frontend app
 COPY . .
-
-# 6. Build the React app
 RUN npm run build
 
-# 7. Install a lightweight server to serve static files
-RUN npm install -g serve
+# Stage 2: Production Nginx Server
+FROM nginx:stable-alpine
 
-# 8. Expose port 3000
-EXPOSE 3000
+# Clean out default nginx content
+RUN rm -rf /usr/share/nginx/html/*
 
-# 9. Command to run the app
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Copy the build output to nginx directory
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Optional: custom nginx.conf (advanced caching)
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

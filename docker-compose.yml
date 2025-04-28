@@ -32,8 +32,10 @@ services:
     ports:
       - "5000:5000"
     environment:
-      MONGO_URI: mongodb://host.docker.internal:27017/ubereats
-      KAFKA_BROKER: kafka:9092
+      #MONGO_URI: mongodb://host.docker.internal:27017/ubereats
+      #KAFKA_BROKER: kafka:9092
+      MONGO_URI: localhost:27017/ubereats
+      KAFKA_BROKER: localhost:9092
 
   frontend:
     build: ./frontend
@@ -41,4 +43,4 @@ services:
     depends_on:
       - backend
     ports:
-      - "3000:3000"
+      - "3000:80"

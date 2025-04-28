@@ -1,22 +1,27 @@
-# Dockerfile for Backend
+# Stage 1: Build Stage
+FROM node:18-alpine AS builder
 
-# 1. Use Node.js official LTS image
-FROM node:18
-
-# 2. Set working directory inside the container
 WORKDIR /app
 
-# 3. Copy package.json and package-lock.json (if exists)
+# Only copy package files initially for better caching
 COPY package*.json ./
 
-# 4. Install backend dependencies
-RUN npm install
+# Install only production dependencies
+RUN npm install --production
 
-# 5. Copy all backend code
+# Copy the full app source
 COPY . .
 
-# 6. Expose backend port (Adjust if your backend runs on a different port)
+# Stage 2: Final Runtime Image
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy only production-ready node_modules and app code
+COPY --from=builder /app .
+
+# Expose API port
 EXPOSE 5000
 
-# 7. Command to run your backend
+# Run the server
 CMD ["npm", "start"]
