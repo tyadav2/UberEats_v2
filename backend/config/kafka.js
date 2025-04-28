@@ -3,6 +3,7 @@ const { Kafka } = require('kafkajs');
 const kafka = new Kafka({
   clientId: 'uber-eats-backend',
   brokers: ['kafka:9092'],
+  //brokers: ['localhost:9092'],
 });
 
 const producer = kafka.producer();

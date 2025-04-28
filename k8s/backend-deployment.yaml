@@ -1,3 +1,4 @@
+# backend-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,6 +21,23 @@ spec:
         - containerPort: 5000
         env:
         - name: MONGO_URI
-          value: "mongodb://host.docker.internal:27017/ubereats"
+          value: "mongodb://mongodb-service:27017/ubereats"
         - name: KAFKA_BROKER
-          value: "host.docker.internal:9092"
+          value: "kafka-service:9092"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ubereats-secrets
+              key: jwt-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 5000
+    targetPort: 5000
+  type: ClusterIP
